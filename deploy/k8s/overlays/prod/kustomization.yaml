@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - hpa.yaml
+  - pdb.yaml
+  # image-patch-cronjob.yaml is optional and remains commented until
+  # ENABLE_AUTO_PATCH (or an equivalent cluster flag) is turned on.
+  # - image-patch-cronjob.yaml
+patches:
+  - path: postgres-ha.yaml

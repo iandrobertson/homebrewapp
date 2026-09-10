@@ -1,0 +1,40 @@
+name: Auto-patch
+
+# Disabled unless the repository variable ENABLE_AUTO_PATCH is exactly "true".
+# Local development and typical forks never set this, so nothing auto-patches.
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  patch:
+    if: ${{ vars.ENABLE_AUTO_PATCH == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: Apply compatible npm patches
+        run: npm update --save
+      - name: Verify
+        run: |
+          npm run typecheck
+          npm run lint
+          npm run test:unit
+          npm audit --audit-level=high
+      - name: Open patch PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/auto-patch
+          title: "chore: apply compatible dependency patches"
+          body: |
+            Opened by the gated auto-patch workflow (`ENABLE_AUTO_PATCH=true`).
+            Review CI on this PR before merging. Does not push to main.
+          commit-message: "chore: apply compatible dependency patches"

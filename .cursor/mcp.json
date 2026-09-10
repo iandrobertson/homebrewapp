@@ -1,0 +1,60 @@
+{
+    "mcpServers": {
+      "supero": {
+        "url": "https://app.supero.dev/mcp/v1/messages",
+        "headers": {
+          "X-API-Key": "${{secrets.SUPERO_HOMEBREWAPP_PROJECTSECRET}}"
+        }
+      },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://brew_root:change-me@localhost:5432/brewchapter"
+      ]
+    },
+    "docker": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-docker"
+      ]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    },
+    "fetch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-fetch"
+      ]
+    },
+    "rtk-optimizer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mcp-servers/rtk-optimizer"
+      ]
+    },
+    "caveman-profiler": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mcp-servers/caveman-profiler"
+      ]
+    },
+    "ponytail-analyzer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mcp-servers/ponytail-analyzer"
+      ]
+    }
+  }
+}

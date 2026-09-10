@@ -1,0 +1,22 @@
+# Optional. Not included by the prod overlay until you uncomment it in
+# kustomization.yaml. Disabled by default so development clusters stay still.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: homebrew-image-patch
+  namespace: homebrew
+spec:
+  schedule: "0 6 * * 1"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: remind
+              image: curlimages/curl:8.16.0
+              command:
+                - /bin/sh
+                - -c
+                - echo "Rebuild and roll the homebrew image after CI scans pass. This CronJob is a reminder, not an in-cluster mutator."

@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homebrew
+  namespace: homebrew
+  labels:
+    app: homebrew
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homebrew
+  template:
+    metadata:
+      labels:
+        app: homebrew
+    spec:
+      containers:
+        - name: app
+          image: homebrewapp:latest
+          ports:
+            - containerPort: 3000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: homebrew-config
+            - secretRef:
+                name: homebrew-secrets
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3000"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: homebrew-secrets
+  namespace: homebrew
+type: Opaque
+stringData:
+  # Replace via External Secrets or sealed-secrets. Never commit real values.
+  DATABASE_URL_APP: postgresql://brew_app:change-me@pgbouncer:5432/homebrew
+  DATABASE_URL_AUTH: postgresql://brew_auth:change-me@pgbouncer:5432/homebrew
+  DATABASE_URL_MIGRATE: postgresql://brew_migrate:change-me@homebrew-pg-rw:5432/homebrew
+  BETTER_AUTH_SECRET: change-me-generate-a-real-32-byte-secret
+  AUDIT_IP_SALT: change-me-generate-a-real-salt

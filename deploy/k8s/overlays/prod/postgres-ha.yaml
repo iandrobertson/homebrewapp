@@ -1,0 +1,7 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: homebrew-pg
+  namespace: homebrew
+spec:
+  instances: 3

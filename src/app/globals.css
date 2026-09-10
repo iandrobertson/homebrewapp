@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-copper-50: #fbf6f0;
+  --color-copper-100: #f3e6d4;
+  --color-copper-200: #e4c9a4;
+  --color-copper-300: #d4a66e;
+  --color-copper-400: #c48445;
+  --color-copper-500: #b06a2e;
+  --color-copper-600: #8f5324;
+  --color-copper-700: #6f3f1c;
+  --color-copper-800: #4e2c14;
+  --color-copper-900: #2f1a0c;
+  --color-ale-500: #2f6b4f;
+  --color-ale-600: #24553e;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-copper-50);
+  color: #2a1d12;
+}

@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_USER: brew_root
+          POSTGRES_PASSWORD: ci-root-password
+          POSTGRES_DB: homebrew
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U brew_root -d homebrew"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    env:
+      POSTGRES_USER: brew_root
+      POSTGRES_PASSWORD: ci-root-password
+      POSTGRES_DB: homebrew
+      BREW_MIGRATE_PASSWORD: ci-migrate-password
+      BREW_AUTH_PASSWORD: ci-auth-password
+      BREW_APP_PASSWORD: ci-app-password
+      DATABASE_URL_MIGRATE: postgresql://brew_migrate:ci-migrate-password@localhost:5432/homebrew
+      DATABASE_URL_AUTH: postgresql://brew_auth:ci-auth-password@localhost:5432/homebrew
+      DATABASE_URL_APP: postgresql://brew_app:ci-app-password@localhost:5432/homebrew
+      BETTER_AUTH_SECRET: ci-secret-not-used-outside-ci-000000000000
+      BETTER_AUTH_URL: http://localhost:3000
+      AUDIT_IP_SALT: ci-salt-not-used-outside-ci
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Bootstrap database roles
+        run: PGPASSWORD=$POSTGRES_PASSWORD bash db/init/01-roles.sh
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:unit
+      - run: npm run test:integration
+      - run: npm run build
+
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+        env:
+          E2E_BASE_URL: ""
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: npm audit
+        run: npm audit --audit-level=high
+      - name: OSV scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2.2.4
+        with:
+          scan-args: |-
+            --lockfile=package-lock.json
+      - name: Build image for scanning
+        run: docker build -t homebrewapp:ci .
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: homebrewapp:ci
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true

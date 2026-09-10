@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgbouncer
+  namespace: homebrew
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgbouncer
+  template:
+    metadata:
+      labels:
+        app: pgbouncer
+    spec:
+      containers:
+        - name: pgbouncer
+          image: bitnami/pgbouncer:1.24.1
+          ports:
+            - containerPort: 5432
+              name: pgsql
+          env:
+            - name: POSTGRESQL_HOST
+              value: homebrew-pg-rw
+            - name: POSTGRESQL_DATABASE
+              value: homebrew
+            - name: PGBOUNCER_POOL_MODE
+              value: transaction
+            - name: PGBOUNCER_PORT
+              value: "5432"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgbouncer
+  namespace: homebrew
+spec:
+  selector:
+    app: pgbouncer
+  ports:
+    - name: pgsql
+      port: 5432
+      targetPort: pgsql
