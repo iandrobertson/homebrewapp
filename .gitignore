@@ -1,0 +1,22 @@
+# Secrets and local env — never commit these
+.env
+.env.*
+!.env.example
+
+# Dependencies and build
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+.vscode/
+
+# Local tooling
+.venv/
+__pycache__/
