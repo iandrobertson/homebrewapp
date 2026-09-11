@@ -30,7 +30,7 @@ jobs:
           npm run test:unit
           npm audit --audit-level=high
       - name: Open patch PR
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/auto-patch
           title: "chore: apply compatible dependency patches"
